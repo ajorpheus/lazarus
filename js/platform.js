@@ -1,5 +1,5 @@
 /*
-Platform specific code that should overwrite any platform stub functions 
+Platform specific code that should overwrite any platform stub functions
 NOTE: this file needs to be loaded after any other library files, but BEFORE any other code is evaluated
 */
 
@@ -8,7 +8,7 @@ Lazarus.platform = "chrome";
 Lazarus.baseURI = chrome.extension.getURL('');
 
 Lazarus.preferencePrefix = "lazarus.preference.";
- 
+
 /**
 * return a preference
 */
@@ -34,17 +34,17 @@ Lazarus.getPref = function(prefName, defaultVal, callback){
 		else {
 			throw Error("Unknown preference '"+ prefName +"'");
 		}
-		
+
 		setTimeout(function(){
 			callback(val);
 		}, 1);
-	
+
 	}
 	else {
 		Lazarus.callBackground("Lazarus.getPref", [prefName, callback]);
 	}
 }
-	
+
 
 /**
 * set a preference
@@ -54,7 +54,7 @@ Lazarus.setPref = function(prefName, val, callback){
 	callback = callback || function(){}
 
 	var name = Lazarus.preferencePrefix + prefName;
-	
+
 	if (Lazarus.environment == "background"){
     Lazarus.getPref(prefName, function(oldVal){
       if (val !== oldVal){
@@ -79,9 +79,9 @@ Lazarus.setPref = function(prefName, val, callback){
 * reset all preferneces back to their default values
 **/
 Lazarus.resetPrefs = function(callback){
-	
+
 	callback = callback || function(){}
-	
+
 	for (var key in localStorage){
 		if (key.indexOf(Lazarus.preferencePrefix) === 0){
 			localStorage.removeItem(key);
@@ -99,14 +99,14 @@ Lazarus.resetPrefs = function(callback){
 Lazarus.callBackground = function(funcName, args){
 
 	args = args || [];
-    
+
 	var callbackInfo = {
 		cmd: "call-background",
 		funcName: funcName,
 		args: args,
 		callbackIndex: -1
 	};
-	
+
 	if (Lazarus.logger){
 		Lazarus.logger.log("call-background", funcName, callbackInfo);
 	}
@@ -126,7 +126,7 @@ Lazarus.callBackground = function(funcName, args){
 			}
 		}
 	}
-  
+
 	if (callback){
     //now send a request to the background page
     chrome.extension.sendRequest(callbackInfo, function(response){
@@ -155,7 +155,7 @@ Lazarus.onCallBackground = function(request, sender, sendResponse){
 	}
 	var response = request;
 	response.success = false;
-	
+
 	if (request.cmd == "call-background"){
 		//is the function to call syncronous or asyncronous?
 		var callbackInfo = request;
@@ -176,7 +176,7 @@ Lazarus.onCallBackground = function(request, sender, sendResponse){
 		if (typeof obj === "function"){
 			//and call it
 			//if the caller has passed a function argument, then we will assume that the first function argument is a callback.
-			
+
 			if (callbackInfo.callbackIndex > -1){
 				//the function to call requires a callback function itself.
 				//so we'll have to add a callback to the arguments, and capture the result
@@ -215,7 +215,7 @@ Lazarus.onCallBackground = function(request, sender, sendResponse){
 **/
 Lazarus.openURL = function(url){
 	var fullURL = (!url.match(/^[\w\-]+:/)) ? (document.URL.replace(/[#\?].*$/, '').replace(/[^\/]*$/, '') + url) : url;
-		
+
 	chrome.tabs.getAllInWindow(null, function(tabs){
 		for(var i=0; i<tabs.length; i++){
 			var tab = tabs[i];
@@ -231,7 +231,7 @@ Lazarus.openURL = function(url){
 }
 
 /*
-load the manifest file for a given extension 
+load the manifest file for a given extension
 */
 // Lazarus.loadManifest = function(callback){
   // var url = Lazarus.baseURI +'manifest.json';

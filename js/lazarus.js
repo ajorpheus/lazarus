@@ -2,12 +2,12 @@
 
 var Lazarus = {
 
-  version: "3.0.5",
+  version: "3.0.7",
 
 	build: 406,
-  
+
   developer: false,
-  
+
 	//FIXME: move to separate module
 	msg: function(msg, type, replacements){
     if (typeof msg == "string" && msg.match(/^[\w\.]*$/)){
@@ -20,10 +20,10 @@ var Lazarus = {
       alert(msg);
     }
 	},
-  
+
   getPrefs: function(prefs, callback){
     var values = {};
-    
+
     var getNextPref = function(){
       if (prefs.length > 0){
         var pref = prefs.shift();
@@ -38,7 +38,6 @@ var Lazarus = {
     }
     getNextPref();
   }
-	
+
 	//TODO: implement setPrefs?
 };
-

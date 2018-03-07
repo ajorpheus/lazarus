@@ -16,14 +16,13 @@
       "48": "Icon-48.png"
    },
    "manifest_version": 2,
-   "name": "Lazarus: Form Recovery Patched",
+   "name": "Lazarus: Form Recovery",
    "options_page": "options.html",
    "page_action": {
       "default_icon": "images/lazarus.png",
       "default_title": "Lazarus: Form Recovery"
    },
    "permissions": [ "http://*/*", "https://*/*", "tabs" ],
-   "update_url": "http://clients2.google.com/service/update2/crx",
    "version": "3.0.7",
    "web_accessible_resources": [ "*" ]
 }

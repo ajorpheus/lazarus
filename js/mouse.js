@@ -6,17 +6,17 @@ Lazarus.Mouse = {
   hoverDelay: 100,
   hoverTimer: 0,
   hoverListeners: [],
-  
+
   initDoc: function(doc){
     Lazarus.Utils.addEvent(doc, "mousemove", Lazarus.Mouse.onMouseMove);
     Lazarus.Utils.addEvent(doc, "mouseout", Lazarus.Mouse.onMouseOut);
   },
-  
+
   cleanupDoc: function(doc){
     Lazarus.Utils.removeEvent(doc, "mousemove", Lazarus.Mouse.onMouseMove);
   },
-  
-  
+
+
   onMouseMove: function(evt){
     Lazarus.Mouse.screenX = evt.screenX;
     Lazarus.Mouse.screenY = evt.screenY;
@@ -26,13 +26,13 @@ Lazarus.Mouse = {
     clearTimeout(Lazarus.Mouse.hoverTimer);
     Lazarus.Mouse.hoverTimer = setTimeout(Lazarus.Mouse.fireHoverEvent, Lazarus.Mouse.hoverDelay);
   },
-  
+
   onMouseOut: function(){
     //leave the screen x and y for now
     Lazarus.Mouse.lastEle = null;
     clearTimeout(Lazarus.Mouse.hoverTimer);
   },
-  
+
   //fire a "lazarus:hover" event on the lastEle
   fireHoverEvent: function(){
     if (Lazarus.Mouse.lastEle){
@@ -44,8 +44,8 @@ Lazarus.Mouse = {
       Lazarus.Mouse.lastEle.dispatchEvent(evt);
     }
   },
-  
-  
+
+
   //return TRUE if mouse is currently over the given element (or one of it's children)
   isOverEle: function(ele){
     var node = Lazarus.Mouse.lastEle;
@@ -59,5 +59,5 @@ Lazarus.Mouse = {
     }
     return false;
   }
-  
+
 }

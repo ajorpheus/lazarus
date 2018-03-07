@@ -3,37 +3,37 @@
 Lazarus.Sync = {
 
   ERROR_INCORRECT_SYNC_KEY: 10001,
-  
+
   API_VERSION: 1,
 
   syncing: false,
-  
+
   syncTimer: 0,
-  
+
   syncTime: 0,
-  
+
   //time (in milliseconds) before a sync will occur after running a database operation
-  SYNC_DATABASE_DELAY: 3000, 
-  
+  SYNC_DATABASE_DELAY: 3000,
+
   //maximum time (in seconds) between syncs (assuming browser is not idle)
   SYNC_IDLE_TIME: 60 * 60,
-  
-  
+
+
   tables: {
     'forms': 'id',
-    'form_fields': 'id', 
+    'form_fields': 'id',
     'fields': 'id',
     'settings': 'name'
   },
-  
+
   //list of records to ignore when syncing
   ignoreRecords: [
     {tableName: 'settings', primaryKeyField: 'lastSyncTime'}
   ],
-  
+
 
   init: function(){
-    
+
     //on every query we should do a sync after the query has completed,
     //but not right after, we should probably wait a little or we risk hammering our server,
     //Also note, that any queries that occur _while_ we are syncing should not
@@ -44,7 +44,7 @@ Lazarus.Sync = {
         Lazarus.Sync.restartSyncTimer();
       }
     });
-    
+
     Lazarus.Event.addListener('databaseTransaction', function(queries){
       for(var i=0; i<queries.length; i++){
         if (Lazarus.Sync.canSync() && !queries[i].match(/^SELECT/i)){
@@ -54,28 +54,28 @@ Lazarus.Sync = {
       }
     });
   },
-  
+
   onClick: function(){
     //if the user hasn't synced in the last X minutes then force a sync now.
     Lazarus.Background.getSetting('lastSyncTime', function(lastSyncTime){
       if ((lastSyncTime + Lazarus.Sync.SYNC_IDLE_TIME < Lazarus.Utils.timestamp()) && Lazarus.Sync.canSync()){
         Lazarus.Sync.runSync();
       }
-    }) 
-  }, 
-  
+    })
+  },
+
   isSyncEnabled: function(callback){
     Lazarus.getPref('syncEnabled', function(syncEnabled){
       callback(syncEnabled);
     });
   },
-  
+
   canSync: function(){
-    //time (in seconds) in which the syncing flag should be removed even if the sync operation hasn't finished 
+    //time (in seconds) in which the syncing flag should be removed even if the sync operation hasn't finished
     //after which it's safe to say something has gone wrong and prevented the flag from being reset.
-    var LAST_SYNC_EXPIRY_TIME = 5 * 60; 
-    var LAST_SYNC_MIN_WAIT_TIME = 15; 
-    
+    var LAST_SYNC_EXPIRY_TIME = 5 * 60;
+    var LAST_SYNC_MIN_WAIT_TIME = 15;
+
     if (Lazarus.Sync.syncing){
       //if the last sync time was a long time ago and the Lazarus.Sync.syncing flag is still true,
       //then something has probably gone wrong, let's reset the flag and try again
@@ -92,16 +92,16 @@ Lazarus.Sync = {
       return (Lazarus.Sync.syncTime + LAST_SYNC_MIN_WAIT_TIME < Lazarus.Utils.timestamp());
     }
   },
-  
+
   restartSyncTimer: function(){
     clearTimeout(Lazarus.Sync.syncTimer);
     setTimeout(function(){
       Lazarus.Sync.runSync();
     }, Lazarus.Sync.SYNC_DATABASE_DELAY);
   },
-  
+
   runSync: function(){
-  
+
     //check again to make sure we can run this sync
     if (Lazarus.Sync.canSync()){
       Lazarus.getPrefs(['syncEnabled', 'syncKey', 'userId'], function(prefs){
@@ -133,8 +133,8 @@ Lazarus.Sync = {
     //setup the first browser sync. All records, hashSeeds, and keys from this browser should be sent to the server
     Lazarus.Sync.syncDatabase(callback);
   },
-  
-  
+
+
   backupSettings: function(callback){
     Lazarus.logger.log("backing up settings...");
     Lazarus.db.exe("ALTER TABLE settings RENAME TO settings_original", function(){
@@ -143,8 +143,8 @@ Lazarus.Sync = {
       });
     });
   },
-  
-  
+
+
   restoreSettings: function(callback){
     Lazarus.logger.log("restoring settings...");
     Lazarus.db.exe("DROP TABLE settings", function(){
@@ -154,11 +154,11 @@ Lazarus.Sync = {
     });
   },
 
-  
+
   setupSecondarySync: function(callback){
     callback = callback || function(){};
     //secondary browsers shouldn't sync their keys, in fact their keys need to be overwritten by the primary browsers keys
-    
+
     Lazarus.Sync.backupSettings(function(){
       Lazarus.Sync.syncDatabase(function(response){
         Lazarus.Sync.syncing = true;
@@ -187,8 +187,8 @@ Lazarus.Sync = {
       });
     });
   },
-  
-  
+
+
   checkSyncKey: function(callback){
     Lazarus.getPref('syncKeyHash', function(syncKeyHash){
       Lazarus.Sync.callAPI("/sync/checkSyncKey", {syncKeyHash:syncKeyHash}, callback);
@@ -200,12 +200,12 @@ Lazarus.Sync = {
   syncDatabase: function(callback){
     //get settings
     callback = callback || function(){};
-    
+
     Lazarus.Sync.syncing = true;
     Lazarus.Sync.syncTime = Lazarus.Utils.timestamp();
-    
+
     Lazarus.logger.log('syncing database...');
-    
+
     Lazarus.getPrefs(['userId', 'syncKey'], function(prefs){
       Lazarus.Background.getSetting('lastSyncTime', function(lastSyncTime){
         var errorMessages = [];
@@ -215,13 +215,13 @@ Lazarus.Sync = {
         if (!prefs.syncKey){
           errorMessages.push("Missing preference 'syncKey'");
         }
-      
+
         if (errorMessages.length == 0){
           Lazarus.logger.log('Sync: getRecordsToSync...');
           Lazarus.Sync.getRecordsToSync(lastSyncTime, prefs.syncKey, function(records){
             //we need to get the list of new records from the server before
             //sending our updated records to the server
-            Lazarus.Sync.getUpdatedRecords(prefs.userId, lastSyncTime, function(response){  
+            Lazarus.Sync.getUpdatedRecords(prefs.userId, lastSyncTime, function(response){
               Lazarus.logger.log('Sync: getUpdatedRecords', response);
               if (response.errorMessages){
                 Lazarus.Sync.syncing = false;
@@ -265,7 +265,7 @@ Lazarus.Sync = {
       }, 0);
     });
   },
-  
+
   //after a successful sync it is now possible to remove any records that have been marked for deletion
   removeDeletedRecords: function(callback){
     var query = "DELETE FROM {table} WHERE status = 1";
@@ -273,19 +273,19 @@ Lazarus.Sync = {
       callback();
     });
   },
-  
-  
+
+
   decryptUpdatedRecords: function(records, syncKey, callback){
     //decrypt the records ready to be inserted into the database
     //we need to use a background thread, because decrypting 100's of strings can take quite some time
     //and doing it in the main thread will cause the browser to become unresponsive
-    
+
     //separate out the encrypted records into an array
     var encryptedData = [];
     for(var i=0; i<records.length; i++){
       encryptedData[i] = records[i].data;
     }
-    
+
     //send to the worker to decrypt
     var worker = new Lazarus.Worker2('aes.js', 'js/');
     worker.call('Lazarus.AES.decryptArray', [encryptedData, syncKey], function(decryptedData, errMsg, err){
@@ -301,13 +301,13 @@ Lazarus.Sync = {
       }
     });
   },
-  
-  
+
+
   mergeUpdatedRecords: function(updatedRecords, syncKey, callback){
-    
+
     Lazarus.Sync.decryptUpdatedRecords(updatedRecords, syncKey, function(records, errMsg, err){
       if (records !== null){
-      
+
         for(var i=0; i<updatedRecords.length; i++){
           //if the record is corrupted, then we're going to have to ignore it,
           //otherwise we'll get the same record next time we request them
@@ -318,33 +318,33 @@ Lazarus.Sync = {
             updatedRecords[i].data = null;
           }
         }
-        
+
         //build the (possibly very large) list of queries to run against the database.
         var queries = [];
         for(var i=0; i<updatedRecords.length; i++){
           var rec = updatedRecords[i];
           if (rec.data){
-            
+
             rec.data[rec.primaryKeyField] = rec.primaryKeyValue;
             rec.data['lastModified'] = rec.lastModified;
-            //we actually want to do an "upsert" here, so if the record exists AND it's last modified time is less than ours 
+            //we actually want to do an "upsert" here, so if the record exists AND it's last modified time is less than ours
             //then we want to update it. If the record doesn't exist, we want to create it.
             //AFAICT sqlite has no ON DUPLICATE KEY UPDATE syntax. It does have INSERT OR REPLACE, but that
             //will not allow us to use the if lastModified < x WHERE clause.
             //So we're going to have to run two statements each time :(
             var fields = Lazarus.Utils.mapKeys(rec.data);
-            
+
             //security check
             var fieldStr = fields.join(',') +","+ rec.primaryKeyField;
             if (fieldStr.indexOf("'") > -1){
-              //fields 
+              //fields
               Lazarus.logger.error("Sync: mergeUpdatedRecords: fields names are not allowed to contain single quotes (') \""+ fieldStr +"\"");
               callback(false);
               return;
             }
             else {
               var query1 = "INSERT OR IGNORE INTO {tableName} ("+ fields.join(",") +") VALUES ({"+ fields.join("},{") +"})";
-              
+
               //build the second query
               var query2 = "UPDATE {tableName} SET";
               for(var field in rec.data){
@@ -355,15 +355,15 @@ Lazarus.Sync = {
               //remove the final ","
               query2 = query2.replace(/,$/, '');
               query2 += " WHERE "+ rec.primaryKeyField +" = {"+ rec.primaryKeyField +"} AND lastModified < {lastModified}";
-              
+
               rec.data.tableName = rec.tableName;
-              
+
               queries.push(Lazarus.db.formatQuery(query1, rec.data));
               queries.push(Lazarus.db.formatQuery(query2, rec.data));
             }
           }
         }
-        
+
         if (queries.length){
           //attempt to run the queries in a single transaction (makes it faster)
           Lazarus.logger.log('Sync: updating database...');
@@ -383,8 +383,8 @@ Lazarus.Sync = {
     });
   },
 
-  
-  
+
+
   //fetch a list of changed records from the server
   getUpdatedRecords: function(userId, lastSyncTime, callback){
     Lazarus.getPref('syncKeyHash', function(syncKeyHash){
@@ -398,22 +398,22 @@ Lazarus.Sync = {
       });
     });
   },
-  
-  
+
+
   sendToServer: function(userId, lastSyncTime, records, callback){
     //how many records do we have?
     //if more than 1000, we should probably break them up and send them in separate bunches
-      
+
     var lastResponse = null;
-    
+
     var sendFunc = function(){
       if (records.length > 0){
-      
+
         Lazarus.logger.log('Sync: average record length '+ Math.floor(JSON.stringify(records).length / records.length));
-        
+
         //grab the next 1000 records.
         var recs = records.splice(0, 1000);
-        
+
         Lazarus.Sync.callAPI("/sync/update", {
           userId: userId,
           lastSyncTime: lastSyncTime,
@@ -421,7 +421,7 @@ Lazarus.Sync = {
           clientTime: Lazarus.Utils.timestamp()
         }, function(response){
           Lazarus.logger.log('Sync: sendToServer', response);
-          
+
           if (response.errorMessages){
             callback(response);
           }
@@ -441,19 +441,19 @@ Lazarus.Sync = {
         callback(true);
       }
     };
-    
+
     sendFunc();
   },
-  
+
   getRecordsToSync: function(lastSyncTime, syncKey, callback){
     //select all the records in the database that have been altered since the last sync time
     var tables = Lazarus.Sync.tables;
-    
+
     var args = [];
     for(var table in tables){
       args.push([table, lastSyncTime, tables[table], syncKey]);
     }
-    
+
     Lazarus.Utils.callAsyncs(Lazarus.Sync.getRecordsFromTable, args, function(results){
       var records = [];
       for(var i=0; i<results.length; i++){
@@ -462,21 +462,21 @@ Lazarus.Sync = {
       callback(records);
     })
   },
-  
-  
+
+
   getRecordsFromTable: function(table, lastSyncTime, primaryKeyField, syncKey, callback){
     Lazarus.db.exe("SELECT * FROM {table} WHERE lastModified > {lastSyncTime}", {table: table, lastSyncTime: lastSyncTime}, function(rs){
       callback(Lazarus.Sync.convertToRecords(rs, table, primaryKeyField, syncKey));
     });
   },
-  
-  
+
+
   convertToRecords: function(rs, table, primaryKeyField, syncKey){
     var records = [];
     for(var i=0; i<rs.length; i++){
-      
+
       var row = rs[i];
-      
+
       //separate out the data to encrypt
       var data = {};
       for(var field in row){
@@ -484,7 +484,7 @@ Lazarus.Sync = {
           data[field] = row[field];
         }
       }
-      
+
       var record = {
         primaryKeyField: primaryKeyField,
         primaryKeyValue: row[primaryKeyField],
@@ -498,7 +498,7 @@ Lazarus.Sync = {
     }
     return records;
   },
-  
+
   shouldSyncRecord: function(record){
     for(var i=0; i<Lazarus.Sync.ignoreRecords.length; i++){
       var ignore = Lazarus.Sync.ignoreRecords[i];
@@ -508,7 +508,7 @@ Lazarus.Sync = {
     }
     return true;
   },
-  
+
   //
   callAPI: function(url, data, callback){
     Lazarus.getPrefs(['userId', 'syncServer'], function(prefs){
@@ -520,16 +520,16 @@ Lazarus.Sync = {
       Lazarus.logger.log("callAPI", url, postData);
       Lazarus.Background.ajax(prefs.syncServer + url, postData, function(response){
         //the sync api responds with an array of error objects if something goes wrong,
-        //but background.ajax only responds with a single error message 
+        //but background.ajax only responds with a single error message
         //so we'll convert any ajax error into an api error object
-        
+
         if (response.error){
           response.errors = [{
             id: 'error.ajax',
             msg: response.error
           }];
         }
-        
+
         if (!response.errors){
           //Server send an invalid response
           Lazarus.logger.error("callAPI unrecognised response object", url, response);
@@ -538,8 +538,8 @@ Lazarus.Sync = {
             msg: 'Server responded with an unrecognised response object'
           }];
         }
-        
-        //we want a simple way to test if there's been an error 
+
+        //we want a simple way to test if there's been an error
         //test now becomes "if (response.errorMessages)"
         if (response.errors.length > 0){
           response.errorMessages = [];
