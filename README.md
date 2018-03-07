@@ -8,4 +8,20 @@ Lazarus securely saves forms as you type, allowing you to safely recover your lo
 
 
 ## Status
-This is the Chrome version that will be updated and then converted to a Firefox version.
+This is the Chrome version in BETA.
+
+Chrome version: Version 64.0.3282.186
+OS: macOS Sierra v10.12.6
+
+## Installation
+
+1. Clone the repo on your local machine
+[https://github.com/manfontan/lazarus](https://github.com/manfontan/lazarus)
+2. Go to chrome://extensions/
+3. Enable Developer module
+![Dev Mode](images/DevMode.png)
+![Enable Dev Mode](images/EnableDevMode.png)
+4. Load unpacked extensions (Browse the folder containing `manifest.json` you cloned in step 1)
+![Load unpacked extensions](images/LoadunpackedExtension.png)
+5. Lazarus Extension is ready.
+![Lazarus Extension ready](images/LazarusExtensionAdded.png)
