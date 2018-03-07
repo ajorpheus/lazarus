@@ -20,6 +20,7 @@ OS: macOS Sierra v10.12.6
 2. Go to chrome://extensions/
 3. Enable Developer module
 ![Dev Mode](images/DevMode.png)
+--
 ![Enable Dev Mode](images/EnableDevMode.png)
 4. Load unpacked extensions (Browse the folder containing `manifest.json` you cloned in step 1)
 ![Load unpacked extensions](images/LoadunpackedExtension.png)
